@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.api.client.Cliente;
+import com.example.api.client.dto.ClienteDto;
 import com.example.api.client.repository.IClienteRepository;
 import com.example.api.client.service.IClienteService;
 
@@ -16,7 +17,15 @@ public class IClienteServiceImpl implements IClienteService{
 	
 	@Transactional
 	@Override
-	public Cliente guardar(Cliente cliente) {
+	public Cliente guardar(ClienteDto clienteDto) {
+		
+		Cliente cliente=Cliente.builder()
+				.idCliente(clienteDto.getIdCliente())
+				.nombreCliente(clienteDto.getNombreCliente())
+				.apellidoCliente(clienteDto.getApellidoCliente())
+				.emailCliente(clienteDto.getEmailCliente())
+				.nacimientoCliente(clienteDto.getNacimientoCliente())
+				.build();
 		// TODO Auto-generated method stub
 		return clienteRepository.save(cliente);
 	}
@@ -31,6 +40,8 @@ public class IClienteServiceImpl implements IClienteService{
 	@Transactional
 	@Override
 	public void eliminarCliente(Cliente cliente) {
+		
+		
 		// TODO Auto-generated method stub
 		clienteRepository.delete(cliente);
 	}
