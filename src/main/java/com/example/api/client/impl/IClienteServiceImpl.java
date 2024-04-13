@@ -46,4 +46,11 @@ public class IClienteServiceImpl implements IClienteService{
 		clienteRepository.delete(cliente);
 	}
 
+	@Override
+	public boolean existById(Integer id) {
+		
+		
+		return clienteRepository.existsById(id);
+	}
+
 }

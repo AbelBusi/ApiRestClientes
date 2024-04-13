@@ -12,4 +12,6 @@ public interface IClienteService {
 	
 	public void eliminarCliente(Cliente cliente);
 	
+	boolean existById (Integer id);
+	
 }

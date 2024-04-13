@@ -1,8 +1,5 @@
 package com.example.api.client.controller;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
@@ -14,11 +11,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.api.client.Cliente;
 import com.example.api.client.dto.ClienteDto;
+import com.example.api.client.pyloard.MensajeResponse;
 import com.example.api.client.service.IClienteService;
 
 @RestController
@@ -29,39 +26,82 @@ public class ClienteController {
 	private IClienteService clienteService;
 
 	@PostMapping("/cliente")
-	@ResponseStatus(HttpStatus.CREATED)
-	public ClienteDto crearCliente(@RequestBody ClienteDto clienteDto) {
-		Cliente clienteSave = clienteService.guardar(clienteDto);
+	public ResponseEntity<?>  crearCliente(@RequestBody ClienteDto clienteDto) {
+		Cliente clienteSave = null;
+		try {
 
-		return ClienteDto.builder()
-				.idCliente(clienteSave.getIdCliente()).
-				nombreCliente(clienteSave.getNombreCliente())
-				.apellidoCliente(clienteSave.getApellidoCliente())
-				.emailCliente(clienteSave.getEmailCliente())
-				.nacimientoCliente(clienteSave.getNacimientoCliente()).build();
+			clienteSave = clienteService.guardar(clienteDto);
+			
+			return new ResponseEntity<>( MensajeResponse.builder()
+					.mensaje("Cliente guardado correctamente")
+					.object(ClienteDto.builder()
+							.idCliente(clienteSave.getIdCliente())
+							.nombreCliente(clienteSave.getNombreCliente())
+							.apellidoCliente(clienteSave.getApellidoCliente())
+							.emailCliente(clienteSave.getEmailCliente())
+							.nacimientoCliente(clienteSave.getNacimientoCliente())
+							.build())
+					.build()
+					,HttpStatus.CREATED);
+
+		} catch (DataAccessException exDT) {
+			
+			return new ResponseEntity<>(MensajeResponse.builder()
+					.mensaje(exDT.getMessage())
+					.object(null)
+					.build(),
+					HttpStatus.METHOD_NOT_ALLOWED);
+			// TODO: handle exception
+		}
 
 	}
 
-	@PutMapping("/cliente")
-	@ResponseStatus(HttpStatus.CREATED)
-	public ClienteDto actualizarCliente(@RequestBody ClienteDto clientesDto) {
+	@PutMapping("/cliente/{idCliente}")
+	public ResponseEntity<?> actualizarCliente(@RequestBody ClienteDto clientesDto, @PathVariable Integer idCliente) {
 
-		Cliente clienteActualizar = clienteService.guardar(clientesDto);
+		Cliente clienteActualizar = null;
+		try {
+			
+			
+			if(clienteService.existById(idCliente)) {
+				clientesDto.setIdCliente(idCliente);
+				clienteActualizar = clienteService.guardar(clientesDto);
+			
+			return new ResponseEntity<>( MensajeResponse.builder()
+					.mensaje("Informacion del cliente actualizado correctamente")
+					.object(ClienteDto.builder()
+							.idCliente(clienteActualizar.getIdCliente())
+							.nombreCliente(clienteActualizar.getNombreCliente())
+							.apellidoCliente(clienteActualizar.getApellidoCliente())
+							.emailCliente(clienteActualizar.getEmailCliente())
+							.nacimientoCliente(clienteActualizar.getNacimientoCliente())
+							.build())
+					.build()
+					,HttpStatus.CREATED);
+			}else {
+				
+				return new ResponseEntity<>(MensajeResponse.builder()
+						.mensaje("El cliente no se encuentra registrado")
+						.object(null)
+						.build(),
+						HttpStatus.METHOD_NOT_ALLOWED);
+			}
 
-		return ClienteDto.builder()
-				.idCliente(clienteActualizar.getIdCliente())
-				.nombreCliente(clienteActualizar.getNombreCliente())
-				.apellidoCliente(clienteActualizar.getApellidoCliente())
-				.emailCliente(clienteActualizar.getEmailCliente())
-				.nacimientoCliente(clienteActualizar.getNacimientoCliente())
-				.build();
+		} catch (DataAccessException exDT) {
+			
+			return new ResponseEntity<>(MensajeResponse.builder()
+					.mensaje(exDT.getMessage())
+					.object(null)
+					.build(),
+					HttpStatus.METHOD_NOT_ALLOWED);
+			// TODO: handle exception
+		}
 
 	}
 
 	@DeleteMapping("/cliente/{idCliente}")
 	public ResponseEntity<?> eliminar(@PathVariable Integer idCliente) {
 
-		Map<String, Object> response = new HashMap<>();
 		try {
 
 			Cliente clienteDelete = clienteService.findById(idCliente);
@@ -71,24 +111,37 @@ public class ClienteController {
 
 		} catch (DataAccessException exDT) {
 
-			response.put("mensaje", exDT.getMessage());
-			response.put("cliente", null);
-
-			return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<>(MensajeResponse.builder().mensaje(exDT.getMessage()).object(null).build(),
+					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 
 	@GetMapping("/cliente/{idCliente}")
-	@ResponseStatus(HttpStatus.OK)
-	public ClienteDto mostrarCliente(@PathVariable Integer idCliente) {
+	public ResponseEntity<?>  mostrarCliente(@PathVariable Integer idCliente) {
 		Cliente cliente = clienteService.findById(idCliente);
-		return ClienteDto.builder()
-				.idCliente(cliente.getIdCliente())
-				.nombreCliente(cliente.getNombreCliente())
-				.apellidoCliente(cliente.getApellidoCliente())
-				.emailCliente(cliente.getEmailCliente())
-				.nacimientoCliente(cliente.getNacimientoCliente())
-				.build();
+		
+		if(cliente==null) {
+			
+			return new ResponseEntity<>(
+					MensajeResponse.builder()
+					.mensaje("El cliente no existe")
+							.object(null)
+							.build(),
+					HttpStatus.NOT_FOUND);
+			
+		}
+		
+		return new ResponseEntity<> (MensajeResponse.builder()
+				.mensaje("Cliente encontrado")
+				.object(ClienteDto.builder()
+						.idCliente(cliente.getIdCliente())
+						.nombreCliente(cliente.getNombreCliente())
+						.apellidoCliente(cliente.getApellidoCliente())
+						.emailCliente(cliente.getEmailCliente())
+						.nacimientoCliente(cliente.getNacimientoCliente())
+						.build())
+				.build()
+				,HttpStatus.OK);
 	}
 
 }
