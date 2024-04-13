@@ -1,5 +1,7 @@
 package com.example.api.client.controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
@@ -140,6 +142,30 @@ public class ClienteController {
 						.emailCliente(cliente.getEmailCliente())
 						.nacimientoCliente(cliente.getNacimientoCliente())
 						.build())
+				.build()
+				,HttpStatus.OK);
+	}
+	
+	@GetMapping("/clientes")
+	public ResponseEntity<?>  mostrarClientes() {
+		
+		List<Cliente> getList =clienteService.listCliente();
+		
+		
+		if(getList==null) {
+			
+			return new ResponseEntity<>(
+					MensajeResponse.builder()
+					.mensaje("No hay registro de clientes")
+							.object(null)
+							.build(),
+					HttpStatus.OK);
+			
+		}
+		
+		return new ResponseEntity<> (MensajeResponse.builder()
+				.mensaje("Cliente encontrado")
+				.object(getList)
 				.build()
 				,HttpStatus.OK);
 	}
